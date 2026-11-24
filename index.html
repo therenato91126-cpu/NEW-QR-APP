@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PARTICIPATION POINTS</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+:root{--c1:#6d28d9;--c2:#2563eb;--c3:#06b6d4;--ink:#111827;--mut:#6b7280;--bg:#f3f4f8;--bad:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,var(--c1),var(--c2) 60%,var(--c3));color:#fff;padding:24px 16px 38px;text-align:center;border-radius:0 0 26px 26px;box-shadow:0 8px 24px rgba(37,99,235,.25)}
+header h1{margin:0;font-size:24px;letter-spacing:4px;font-weight:800}
+header p{margin:6px 0 0;opacity:.9;font-size:13px;letter-spacing:1px}
+main{max-width:760px;margin:-22px auto 0;padding:0 14px 40px}
+.tabs{display:flex;gap:8px;background:#fff;padding:6px;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:14px}
+.tabs button{flex:1}
+button{padding:10px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:transform .08s}
+button:active{transform:scale(.97)}
+button.sec{background:#e5e7eb;color:var(--ink)}
+button.danger{background:var(--bad)}
+button.small{padding:6px 10px;font-size:13px}
+button.ghost{background:#fff;color:var(--c2);border:1px solid #c7d2fe}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;background:#fff}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.card h3{margin:0 0 10px;font-size:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hint{font-size:13px;color:var(--mut)}
+.hidden{display:none!important}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#eef2ff;color:var(--c1);border:1px solid #c7d2fe;padding:8px 14px;border-radius:999px;font-weight:700}
+.chip.on{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border-color:transparent}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:14px;padding:12px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.stat b{display:block;font-size:22px;color:var(--c2)}
+.stat span{font-size:12px;color:var(--mut)}
+.rank{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;margin-bottom:8px;background:#f9fafb}
+.pos{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;background:#9ca3af}
+.r1 .pos{background:#f59e0b}.r3 .pos{background:#b45309}
+.r1{box-shadow:0 0 0 2px #fde68a inset}
+.nm{flex:1;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:9px 6px;border-bottom:1px solid #f0f0f3;text-align:left}
+th{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.msg{padding:11px;border-radius:10px;margin-top:10px;font-size:15px;font-weight:600}
+.ok{background:#dcfce7;color:#166534}
+.err{background:#fee2e2;color:#991b1b}
+.flash{animation:pop .45s ease}
+@keyframes pop{0%{transform:scale(.9);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+.saldo{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border-radius:18px;padding:22px;text-align:center;box-shadow:0 8px 22px rgba(37,99,235,.25)}
+.saldo .big{font-size:44px;font-weight:800;margin:4px 0}
+.saldo .lbl{font-size:12px;opacity:.9;letter-spacing:2px;text-transform:uppercase}
+video{width:100%;max-height:320px;background:#000;border-radius:12px}
+#printArea{display:flex;flex-wrap:wrap;gap:12px}
+.qrItem{width:180px;text-align:center;border:2px dashed #c7d2fe;border-radius:12px;padding:8px;box-sizing:border-box}
+.qrItem img{width:150px;height:150px}
+@media print{
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{position:absolute;left:0;top:0;width:100%}
+  .qrItem{break-inside:avoid}
+}
+@media (max-width:520px){.stats{grid-template-columns:1fr 1fr 1fr}.stat b{font-size:18px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>PARTICIPATION POINTS</h1>
+  <p>Cada participación suma 0.50 puntos</p>
+</header>
+
+<main>
+<div class="tabs">
+  <button id="tabAlumno">Soy estudiante</button>
+  <button class="sec" id="tabDocente">Docente</button>
+</div>
+
+<!-- ============ ESTUDIANTE ============ -->
+<section id="panelAlumno">
+  <div class="card" id="loginAlumno">
+    <h3>Ingresar</h3>
+    <input id="codigo" placeholder="Tu código" autocomplete="username" style="margin-bottom:8px">
+    <input id="pin" type="password" placeholder="PIN" inputmode="numeric" autocomplete="current-password" style="margin-bottom:8px">
+    <button id="btnLogin" style="width:100%">Entrar</button>
+    <div id="msgAlumno"></div>
+  </div>
+
+  <div class="hidden" id="perfilAlumno">
+    <div class="saldo">
+      <div class="lbl" id="cursoAlumno"></div>
+      <div style="font-size:18px;font-weight:700" id="nombreAlumno"></div>
+      <div class="lbl" style="margin-top:10px">Puntos disponibles</div>
+      <div class="big" id="saldoAlumno"></div>
+      <div id="puestoAlumno" style="font-size:14px;opacity:.95"></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Historial</h3>
+      <table><thead><tr><th>Fecha</th><th>Tipo</th><th>Puntos</th></tr></thead><tbody id="histAlumno"></tbody></table>
+    </div>
+    <div class="row"><button class="sec" id="btnSalir">Salir</button></div>
+  </div>
+</section>
+
+<!-- ============ DOCENTE ============ -->
+<section id="panelDocente" class="hidden">
+  <div class="card">
+    <h3>Clave docente</h3>
+    <div class="row">
+      <input id="teacherKey" type="password" placeholder="Clave docente" style="flex:1">
+      <button id="btnGuardarClave">Guardar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Cursos</h3>
+    <div class="chips" id="chips"></div>
+    <div class="row" style="margin-top:12px">
+      <input id="nuevoCurso" placeholder="Nuevo curso, ej. 9no B" style="flex:1">
+      <button id="btnCrearCurso">Crear curso</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="sec small hidden" id="btnBorrarCurso">Eliminar curso vacío</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="card">
+    <h3>Top del curso</h3>
+    <div id="ranking"></div>
+  </div>
+
+  <div class="card">
+    <h3>Escanear QR</h3>
+    <div class="row" style="margin-bottom:8px">
+      <button id="btnCam">Activar cámara</button>
+      <button class="sec" id="btnCamStop">Detener</button>
+      <span id="statusCam" class="hint">Cámara apagada</span>
+    </div>
+    <video id="video" playsinline muted class="hidden"></video>
+    <canvas id="canvas" class="hidden"></canvas>
+    <div id="msgDocente"></div>
+    <p class="hint">Cada QR leído suma 0.50 puntos. El mismo QR no vuelve a sumar durante 3 segundos.</p>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Estudiantes</h3>
+      <div class="row">
+        <button class="sec small" id="btnGenerarQr">Generar QR faltantes</button>
+        <button class="sec small" id="btnCsv">Exportar CSV</button>
+        <button class="sec small" id="btnRefrescar">Actualizar</button>
+      </div>
+    </div>
+    <table style="margin-top:10px">
+      <thead><tr><th>Nombre</th><th>Saldo</th><th></th></tr></thead>
+      <tbody id="tbodyDocente"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3 style="margin:0">Últimos movimientos</h3>
+      <button class="sec small" id="btnDeshacer">Deshacer último</button>
+    </div>
+    <table style="margin-top:10px"><tbody id="tbodyRec"></tbody></table>
+  </div>
+
+  <div class="card">
+    <h3>Imprimir QR del curso</h3>
+    <div class="row">
+      <button id="btnPreparar">Preparar impresión</button>
+      <button class="sec" id="btnImprimir">Imprimir</button>
+    </div>
+    <div id="printArea" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h3>Alta de estudiantes en <span id="altaCurso"></span></h3>
+    <p class="hint">Una línea por estudiante: codigo;nombre;pin. Si el código ya existe, se actualiza el nombre, el PIN si escribes uno, y el curso.</p>
+    <textarea id="altaTexto" rows="6" placeholder="001;Ana Pérez;1234"></textarea>
+    <div class="row" style="margin-top:8px"><button id="btnAlta">Guardar estudiantes</button></div>
+  </div>
+</section>
+</main>
+
+<script>
+// URL de la aplicación web de Apps Script (termina en /exec)
+const API = 'https://script.google.com/macros/s/AKfycbycMXdpvKP2zYjL3vLG5-qP8CIPQiLJYJnl23Lxjw4sOX0bf5Oz9A7RFm21lVUNgFF7jw/exec';
+
+let DATA = { cursos: [], estudiantes: [] };
+let RES = {};
+let CURSO = '';
+
+async function api(body) {
+  const r = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+const $ = id => document.getElementById(id);
+function msg(id, text, ok) {
+  const m = $(id);
+  m.className = 'msg ' + (ok ? 'ok flash' : 'err');
+  m.textContent = text;
+}
+function fmt(n) { return Number(n || 0).toFixed(2).replace('.', ','); }
+function clave() { return sessionStorage.getItem('tk') || ''; }
+function btn(texto, clase, fn) {
+  const b = document.createElement('button');
+  b.className = clase;
+  b.textContent = texto;
+  b.onclick = fn;
+  return b;
+}
+function cursoEst() { return DATA.estudiantes.filter(e => e.curso === CURSO); }
+
+// ---------- pestañas ----------
+function verPanel(p) {
+  $('panelAlumno').classList.toggle('hidden', p !== 'alumno');
+  $('panelDocente').classList.toggle('hidden', p !== 'docente');
+  $('tabAlumno').className = p === 'alumno' ? '' : 'sec';
+  $('tabDocente').className = p === 'docente' ? '' : 'sec';
+}
+$('tabAlumno').onclick = () => verPanel('alumno');
+$('tabDocente').onclick = () => { verPanel('docente'); if (clave()) cargarTodo(); };
+
+// ---------- estudiante ----------
+$('btnLogin').onclick = async () => {
+  const r = await api({ action: 'login', codigo: $('codigo').value.trim(), pin: $('pin').value.trim() });
+  if (!r.ok) { msg('msgAlumno', r.error || 'Error', false); return; }
+  $('msgAlumno').textContent = '';
+  $('loginAlumno').classList.add('hidden');
+  $('perfilAlumno').classList.remove('hidden');
+  $('cursoAlumno').textContent = r.curso || 'Sin curso';
+  $('nombreAlumno').textContent = r.nombre;
+  $('saldoAlumno').textContent = fmt(r.saldo) + ' pts';
+  $('puestoAlumno').textContent = r.total ? 'Puesto ' + r.puesto + ' de ' + r.total + ' en tu curso' : '';
+  const tb = $('histAlumno');
+  tb.innerHTML = '';
+  (r.historial || []).slice().reverse().forEach(h => {
+    const tr = document.createElement('tr');
+    [h.fecha, h.tipo === 'canje' ? 'Uso de puntos' : 'Participación', (h.puntos > 0 ? '+' : '') + fmt(h.puntos)]
+      .forEach(t => { const td = document.createElement('td'); td.textContent = t; tr.appendChild(td); });
+    tb.appendChild(tr);
+  });
+};
+$('btnSalir').onclick = () => {
+  $('pin').value = '';
+  $('perfilAlumno').classList.add('hidden');
+  $('loginAlumno').classList.remove('hidden');
+};
+
+// ---------- docente: carga y render ----------
+$('teacherKey').value = clave();
+$('btnGuardarClave').onclick = () => {
+  sessionStorage.setItem('tk', $('teacherKey').value.trim());
+  cargarTodo();
+};
+$('btnRefrescar').onclick = cargarTodo;
+
+async function cargarTodo() {
+  if (!clave()) return;
+  const [l, r] = await Promise.all([
+    api({ action: 'list', teacherKey: clave() }),
+    api({ action: 'resumen', teacherKey: clave() })
+  ]);
+  if (!l.ok) { msg('msgDocente', l.error, false); return; }
+  DATA = l;
+  RES = r.ok ? r : {};
+  if (!DATA.cursos.includes(CURSO)) {
+    const guardado = localStorage.getItem('pp_curso');
+    CURSO = DATA.cursos.includes(guardado) ? guardado : (DATA.cursos[0] || '');
+  }
+  localStorage.setItem('pp_curso', CURSO);
+  renderAll();
+}
+
+function renderAll() {
+  renderChips();
+  renderStats();
+  renderRanking();
+  renderTabla();
+  renderRecientes();
+  $('altaCurso').textContent = CURSO || '(crea un curso primero)';
+  $('btnBorrarCurso').classList.toggle('hidden', !CURSO || cursoEst().length > 0);
+}
+
+function renderChips() {
+  const c = $('chips');
+  c.innerHTML = '';
+  DATA.cursos.forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (n === CURSO ? ' on' : '');
+    b.textContent = n;
+    b.onclick = () => { CURSO = n; localStorage.setItem('pp_curso', n); renderAll(); };
+    c.appendChild(b);
+  });
+  if (!DATA.cursos.length) {
+    const s = document.createElement('span');
+    s.className = 'hint';
+    s.textContent = 'Todavía no hay cursos. Crea el primero abajo.';
+    c.appendChild(s);
+  }
+}
+
+function renderStats() {
+  const est = cursoEst();
+  const total = est.reduce((a, e) => a + e.saldo, 0);
+  const datos = [[est.length, 'Estudiantes'], [fmt(total), 'Puntos del curso'], [RES.participacionesHoy || 0, 'Participaciones hoy']];
+  const box = $('stats');
+  box.innerHTML = '';
+  datos.forEach(([v, l]) => {
+    const d = document.createElement('div');
+    d.className = 'stat';
+    const b = document.createElement('b'); b.textContent = v;
+    const s = document.createElement('span'); s.textContent = l;
+    d.append(b, s);
+    box.appendChild(d);
+  });
+}
+
+function renderRanking() {
+  const box = $('ranking');
+  box.innerHTML = '';
+  const top = cursoEst().filter(e => e.saldo > 0).sort((a, b) => b.saldo - a.saldo).slice(0, 3);
+  if (!top.length) {
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = 'Todavía no hay participaciones en este curso.';
+    box.appendChild(p);
+    return;
+  }
+  top.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'rank r' + (i + 1);
+    const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = i + 1;
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = e.nombre;
+    const pt = document.createElement('b'); pt.textContent = fmt(e.saldo) + ' pts';
+    row.append(pos, nm, pt);
+    box.appendChild(row);
+  });
+}
+
+function renderTabla() {
+  const tb = $('tbodyDocente');
+  tb.innerHTML = '';
+  const est = cursoEst().slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  if (!est.length) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 3;
+    td.className = 'hint';
+    td.textContent = CURSO ? 'Este curso no tiene estudiantes. Usa el bloque de alta de abajo.' : 'Crea un curso para empezar.';
+    tr.appendChild(td);
+    tb.appendChild(tr);
+    return;
+  }
+  est.forEach(e => {
+    const tr = document.createElement('tr');
+    const tdN = document.createElement('td'); tdN.textContent = e.nombre;
+    const tdS = document.createElement('td'); tdS.textContent = fmt(e.saldo); tdS.style.fontWeight = '700';
+    const tdB = document.createElement('td'); tdB.style.whiteSpace = 'nowrap';
+    tdB.append(
+      btn('Canjear', 'small danger', () => canjear(e)), ' ',
+      btn('Nuevo QR', 'small ghost', () => nuevoQr(e)), ' ',
+      btn('Mover', 'small sec', () => mover(e))
+    );
+    tr.append(tdN, tdS, tdB);
+    tb.appendChild(tr);
+  });
+}
+
+function renderRecientes() {
+  const tb = $('tbodyRec');
+  tb.innerHTML = '';
+  const lista = RES.recientes || [];
+  if (!lista.length) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.className = 'hint';
+    td.textContent = 'Sin movimientos todavía.';
+    tr.appendChild(td);
+    tb.appendChild(tr);
+    return;
+  }
+  lista.forEach(m => {
+    const tr = document.createElement('tr');
+    [m.fecha, m.nombre, m.tipo === 'canje' ? 'Uso de puntos' : 'Participación', (m.puntos > 0 ? '+' : '') + fmt(m.puntos)]
+      .forEach(t => { const td = document.createElement('td'); td.textContent = t; tr.appendChild(td); });
+    tb.appendChild(tr);
+  });
+}
+
+// ---------- cursos ----------
+$('btnCrearCurso').onclick = async () => {
+  const n = $('nuevoCurso').value.trim();
+  if (!n) return;
+  if (!clave()) { msg('msgDocente', 'Primero guarda la clave docente.', false); return; }
+  const r = await api({ action: 'crearCurso', teacherKey: clave(), curso: n });
+  if (r.ok) {
+    $('nuevoCurso').value = '';
+    CURSO = n;
+    localStorage.setItem('pp_curso', n);
+    msg('msgDocente', 'Curso creado: ' + n, true);
+  } else {
+    msg('msgDocente', r.error, false);
+  }
+  cargarTodo();
+};
+
+$('btnBorrarCurso').onclick = async () => {
+  if (!CURSO || !confirm('¿Eliminar el curso ' + CURSO + '?')) return;
+  const r = await api({ action: 'borrarCurso', teacherKey: clave(), curso: CURSO });
+  msg('msgDocente', r.ok ? 'Curso eliminado' : r.error, !!r.ok);
+  if (r.ok) { CURSO = ''; localStorage.removeItem('pp_curso'); }
+  cargarTodo();
+};
+
+// ---------- acciones sobre estudiantes ----------
+async function canjear(e) {
+  const p = prompt('Puntos que ' + e.nombre + ' utiliza (saldo: ' + fmt(e.saldo) + '):', '');
+  if (p === null) return;
+  const puntos = Number(String(p).replace(',', '.'));
+  if (!(puntos > 0)) { alert('Cantidad no válida'); return; }
+  const nota = prompt('Motivo o uso (opcional):', '') || '';
+  if (!confirm('¿Descontar ' + fmt(puntos) + ' pts a ' + e.nombre + '?')) return;
+  const r = await api({ action: 'canje', teacherKey: clave(), codigo: e.codigo, puntos, nota });
+  msg('msgDocente', r.ok ? 'Descontado. Nuevo saldo de ' + r.nombre + ': ' + fmt(r.saldo) : r.error, !!r.ok);
+  cargarTodo();
+}
+
+async function nuevoQr(e) {
+  if (!confirm('¿Crear un QR nuevo para ' + e.nombre + '? El QR anterior dejará de funcionar.')) return;
+  const r = await api({ action: 'nuevoQr', teacherKey: clave(), codigo: e.codigo });
+  msg('msgDocente', r.ok ? 'QR nuevo creado para ' + e.nombre : r.error, !!r.ok);
+  cargarTodo();
+}
+
+async function mover(e) {
+  const n = prompt('Nuevo curso para ' + e.nombre + ' (escribe el nombre exacto como aparece en Cursos):', CURSO);
+  if (!n) return;
+  const r = await api({ action: 'moverEstudiante', teacherKey: clave(), codigo: e.codigo, curso: n.trim() });
+  msg('msgDocente', r.ok ? e.nombre + ' movido a ' + n.trim() : r.error, !!r.ok);
+  cargarTodo();
+}
+
+$('btnDeshacer').onclick = async () => {
+  if (!clave()) return;
+  if (!confirm('¿Deshacer el último movimiento?')) return;
+  const r = await api({ action: 'deshacer', teacherKey: clave() });
+  msg('msgDocente', r.ok ? r.texto : r.error, !!r.ok);
+  cargarTodo();
+};
+
+$('btnGenerarQr').onclick = async () => {
+  if (!clave()) return;
+  const r = await api({ action: 'qrs', teacherKey: clave() });
+  msg('msgDocente', r.ok ? 'QR generados para quienes no tenían.' : r.error, !!r.ok);
+  cargarTodo();
+};
+
+$('btnCsv').onclick = () => {
+  let out = 'Estudiante;Curso;Puntos\n';
+  cursoEst().forEach(e => {
+    out += '"' + e.nombre.replace(/"/g, '""') + '";' + e.curso + ';' + fmt(e.saldo) + '\n';
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + out], { type: 'text/csv' }));
+  a.download = 'puntos_' + CURSO.replace(/\s+/g, '_') + '.csv';
+  a.click();
+};
+
+// ---------- impresión de QR ----------
+$('btnPreparar').onclick = () => {
+  const est = cursoEst().filter(e => e.qr);
+  const area = $('printArea');
+  area.innerHTML = '';
+  if (!est.length) { msg('msgDocente', 'Este curso no tiene QR. Pulsa "Generar QR faltantes".', false); return; }
+  est.forEach(e => {
+    const q = qrcode(0, 'M');
+    q.addData(e.qr);
+    q.make();
+    const item = document.createElement('div');
+    item.className = 'qrItem';
+    const img = document.createElement('img');
+    img.src = q.createDataURL(4);
+    const n = document.createElement('div');
+    n.style.fontWeight = '700'; n.style.fontSize = '13px';
+    n.textContent = e.nombre;
+    const c = document.createElement('div');
+    c.style.fontSize = '12px'; c.style.color = '#6b7280';
+    c.textContent = CURSO + ' · ' + e.codigo;
+    item.append(img, n, c);
+    area.appendChild(item);
+  });
+};
+$('btnImprimir').onclick = () => window.print();
+
+// ---------- escaneo con cámara ----------
+let stream = null;
+let scanning = false;
+let lastSeen = {};
+let busy = false;
+const COOLDOWN = 3000;
+const video = $('video');
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+$('btnCam').onclick = async () => {
+  if (!clave()) { msg('msgDocente', 'Primero guarda la clave docente.', false); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    msg('msgDocente', 'Este navegador no permite usar la cámara. Usa Chrome o Safari con HTTPS.', false);
+    return;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = stream;
+    video.classList.remove('hidden');
+    await video.play();
+    scanning = true;
+    $('statusCam').textContent = 'Cámara activa';
+    requestAnimationFrame(loopScan);
+  } catch (err) {
+    msg('msgDocente', 'No se pudo abrir la cámara: ' + err.message, false);
+  }
+};
+
+$('btnCamStop').onclick = () => {
+  scanning = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  video.classList.add('hidden');
+  $('statusCam').textContent = 'Cámara apagada';
+};
+
+function loopScan() {
+  if (!scanning) return;
+  if (video.readyState === video.HAVE_ENOUGH_DATA && !busy) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code && code.data) onQR(code.data);
+  }
+  requestAnimationFrame(loopScan);
+}
+
+async function onQR(texto) {
+  const now = Date.now();
+  if (lastSeen[texto] && now - lastSeen[texto] < COOLDOWN) return;
+  lastSeen[texto] = now;
+  busy = true;
+  try {
+    const r = await api({ action: 'scan', teacherKey: clave(), tag: texto });
+    if (r.ok) {
+      msg('msgDocente', r.nombre + ' (' + (r.curso || 'sin curso') + '): +0.5. Saldo ' + fmt(r.saldo), true);
+      cargarTodo();
+    } else {
+      msg('msgDocente', r.error || 'Error', false);
+    }
+  } catch (err) {
+    msg('msgDocente', 'Sin conexión: ' + err.message, false);
+  } finally {
+    busy = false;
+  }
+}
+
+// ---------- alta ----------
+$('btnAlta').onclick = async () => {
+  if (!clave()) { msg('msgDocente', 'Primero guarda la clave docente.', false); return; }
+  if (!CURSO) { msg('msgDocente', 'Crea o elige un curso primero.', false); return; }
+  const rows = $('altaTexto').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [codigo, nombre, pin] = l.split(';').map(x => (x || '').trim());
+    return { codigo, nombre, pin };
+  });
+  if (!rows.length) return;
+  const r = await api({ action: 'alta', teacherKey: clave(), curso: CURSO, rows });
+  msg('msgDocente', r.ok ? 'Nuevos: ' + r.nuevos + '. Actualizados: ' + r.actualizados : r.error, !!r.ok);
+  if (r.ok) { $('altaTexto').value = ''; cargarTodo(); }
+};
+
+// ---------- inicio ----------
+$('btnCrearCurso').dataset.ready = '1';
+if (clave()) cargarTodo();
+</script>
+</body>
+</html>
